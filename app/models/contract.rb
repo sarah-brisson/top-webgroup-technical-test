@@ -156,6 +156,16 @@ class LeavePeriod < Contract
     end
   end
 
+  protected def get_last_period_ten_percent_rest
+    if index > 0
+      previous_period = periods[index-1] 
+      previous_rest = previous_period.payment_by_ten_percent_rest
+      return previous_rest
+    else
+      return 0.0
+    end
+  end
+
   # we calculate how much of the final value is left to be paid by the ten percent method
   protected def deduct_payment_from_ten_percent_rest(value)
     value.is_a?(Numeric) || raise(ArgumentError, "Value must be a numeric type")
@@ -182,7 +192,7 @@ end
 class MonthlyPayment < LeavePeriod
   attr_reader :perceived_salary, :payment_in_june, :payment_by_the_dozen, :payment_by_ten_percent
 
-  def initialize(start_date, end_date, salary, end_of_period)
+  def initialize(start_date, end_date, salary, end_of_contract=false)
     super(start_date, end_date, salary)
 
     unless start_date < end_date
@@ -195,6 +205,11 @@ class MonthlyPayment < LeavePeriod
     calculate_perceived_salary()
     set_payment_in_june()
     set_payment_by_the_dozen()
+    set_payment_by_ten_percent()
+
+    if @end_of_contract
+      adjust_payments_end_of_contract()
+    end 
   end
 
   private def calculate_perceived_salary
@@ -211,7 +226,6 @@ class MonthlyPayment < LeavePeriod
     if @start_date.month == 6
       @payment_in_june = super.get_last_period_leave_value
     else
-      # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
       @payment_in_june = 0.0
     end
   end
@@ -219,11 +233,30 @@ class MonthlyPayment < LeavePeriod
   private def set_payment_by_the_dozen
     last_period_leave_value = super.get_last_period_leave_value
     @payment_by_the_dozen = (last_period_leave_value / 12).round(2)
-    # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
   end
 
   private def set_payment_by_ten_percent
     @payment_by_ten_percent = @perceived_salary * 0.1
     super.deduct_payment_from_ten_percent_rest(@payment_by_ten_percent)
+    # If it's June, we need to add the rest of the last period
+    if @start_date.month == 6
+      @payment_by_ten_percent += super.get_last_period_ten_percent_rest()
+    end
+  end
+
+  private def adjust_payments_end_of_contract
+    if @end_of_contract
+      # Payment in June
+      # If it's june we need to pay the last period leave value + this period's value
+      @payment_in_june = @payment_in_june + super.final_leave_value
+
+      # Payment by the dozen
+      # We need to pay the rest that is due + the accumulation from the current period
+      @payment_by_the_dozen = @payment_by_the_dozen + super.payment_by_the_dozen_rest + super.final_leave_value
+
+      # Payment by ten percent
+      # We need only need to pay the rest that is due
+      @payment_by_ten_percent = @payment_by_ten_percent + super.payment_by_ten_percent_rest
+    end
   end
 end
