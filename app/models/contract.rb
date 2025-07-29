@@ -69,6 +69,8 @@ class LeavePeriod < Contract
     calculate_maintain_salary_leave_value()
     calculate_ten_percent_leave_value()
     set_final_leave_value()
+    @payment_by_ten_percent_rest = get_last_period_leave_value()
+    @payment_by_the_dozen_rest = get_last_period_leave_value()
   end
 
   private def calculate_nb_months
@@ -140,8 +142,6 @@ class LeavePeriod < Contract
     else
       @final_leave_value = @ten_percent_leave_value
     end
-    @payment_by_ten_percent_rest = @final_leave_value
-    @payment_by_the_dozen_rest = @final_leave_value
     @final_leave_value
   end
 
@@ -177,11 +177,12 @@ class LeavePeriod < Contract
   end
 
 end
+
+
 class MonthlyPayment < LeavePeriod
   attr_reader :perceived_salary, :payment_in_june, :payment_by_the_dozen, :payment_by_ten_percent
 
-  def initialize(start_date, end_date, salary)
-  # def initialize(start_date, end_date, salary, perceived_salary=0.0, payment_in_june=0.0, payment_by_the_dozen=0.0, payment_by_ten_percent=0.0)
+  def initialize(start_date, end_date, salary, end_of_period)
     super(start_date, end_date, salary)
 
     unless start_date < end_date
