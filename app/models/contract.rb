@@ -63,7 +63,7 @@ class LeavePeriod < Contract
     end
 
     @maintain_salary_leave_value = maintain_salary_leave_value.to_f
-    @ten_percent_leave_value ten_percent_leave_value.to_f
+    @ten_percent_leave_value = ten_percent_leave_value.to_f
     @final_leave_value = final_leave_value.to_f
   end
 end
