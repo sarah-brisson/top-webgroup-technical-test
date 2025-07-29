@@ -1,0 +1,24 @@
+<%= debug @periods %>
+<div>
+    <h2>Résultat du calcul</h2>
+    <table>
+        <tr>
+            <th>Périodes</th>
+            <th>Nombre de mois d'acquisition</th>
+            <th>Nombre de jours acquis</th>
+            <th>Méthode "maintien de salaire"</th>
+            <th>Méthode 10%</th>
+            <th>Valeur monétaire de ces jours : max des 2 méthodes à gauche</th>
+        </tr>
+    <% @periods.each do |period| %>
+        <tr>
+        <td>hello</td>
+        <td><%= period.start_date %></td>
+        <td><%= period.end_date %></td>
+        <td><%= period.salary %></td>
+        <!-- Add more cells for other attributes -->
+        </tr>
+    <% end %>
+    </table>
+    <%= yield %>
+</div>

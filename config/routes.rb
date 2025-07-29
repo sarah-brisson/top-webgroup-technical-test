@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get "pages/simulator"
+  get '', to: 'pages#simulator'
+  post 'simulator/calculate', to: 'pages#calculate', as: :simulator_calculate
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
