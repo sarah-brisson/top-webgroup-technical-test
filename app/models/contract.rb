@@ -40,15 +40,23 @@ class Contract
     end
 
     @periods = periods
+    @periods.each do |period|
+      period.parent_periods = @periods
+    end
   end
 end
+
+
+
+
 
 
 class LeavePeriod < Contract
   attr_accessor :nb_months, :nb_leave_days
   attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value, :payment_by_ten_percent_rest, :payment_by_the_dozen_rest
+  attr_accessor :parent_periods
 
-  def initialize(start_date, end_date, salary, index=0, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
+  def initialize(start_date, end_date, salary, index=0)
     super(start_date, end_date, salary)
 
     if start_date.month < 6 
@@ -64,13 +72,12 @@ class LeavePeriod < Contract
       end
     end
 
+    @index = index
     calculate_nb_months()
     calculate_nb_leave_days()
     calculate_maintain_salary_leave_value()
     calculate_ten_percent_leave_value()
     set_final_leave_value()
-    @payment_by_ten_percent_rest = get_last_period_leave_value()
-    @payment_by_the_dozen_rest = get_last_period_leave_value()
   end
 
   private def calculate_nb_months
@@ -145,24 +152,21 @@ class LeavePeriod < Contract
     @final_leave_value
   end
 
-  protected def get_last_period_leave_value
-    # Returns the leave value of the last period
-    if index > 0
-      previous_period = periods[index-1] 
-      previous_leave_value = previous_period.final_leave_value
-      return previous_leave_value
+  def get_last_period_leave_value
+    if @index > 0 && parent_periods && parent_periods[@index-1]
+      previous_period = parent_periods[@index-1]
+      previous_period.final_leave_value
     else
-      return 0.0
+      0.0
     end
   end
 
   protected def get_last_period_ten_percent_rest
-    if index > 0
-      previous_period = periods[index-1] 
-      previous_rest = previous_period.payment_by_ten_percent_rest
-      return previous_rest
+    if @index > 0 && parent_periods && parent_periods[@index-1]
+      previous_period = parent_periods[@index-1]
+      previous_period.payment_by_ten_percent_rest
     else
-      return 0.0
+      0.0
     end
   end
 
@@ -187,6 +191,9 @@ class LeavePeriod < Contract
   end
 
 end
+
+
+
 
 
 class MonthlyPayment < LeavePeriod
