@@ -46,7 +46,7 @@ end
 
 class LeavePeriod < Contract
   attr_accessor :nb_months, :nb_leave_days
-  attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
+  attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value, :payment_by_ten_percent_rest, :payment_by_the_dozen_rest
 
   def initialize(start_date, end_date, salary, index=0, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
     super(start_date, end_date, salary)
@@ -71,7 +71,7 @@ class LeavePeriod < Contract
     set_final_leave_value()
   end
 
-  def calculate_nb_months
+  private def calculate_nb_months
     # Contract is less than a month
     if @start_date.year == @end_date.year && @start_date.month == @end_date.month
       @nb_months = Utils.calculate_nb_days_prorata(@start_date, @end_date)
@@ -106,7 +106,7 @@ class LeavePeriod < Contract
     @nb_months
   end
 
-  def calculate_nb_leave_days
+  private def calculate_nb_leave_days
     if @nb_months > 0
       @nb_leave_days = (@nb_months*2.5).round(3)
     else
@@ -115,7 +115,7 @@ class LeavePeriod < Contract
     @nb_leave_days
   end
 
-  def calculate_maintain_salary_leave_value
+  private def calculate_maintain_salary_leave_value
     if @nb_leave_days > 0
       @maintain_salary_leave_value = ((@salary / 22) * @nb_leave_days).round(2)
     else
@@ -124,7 +124,7 @@ class LeavePeriod < Contract
     @maintain_salary_leave_value
   end
 
-  def calculate_ten_percent_leave_value
+  private def calculate_ten_percent_leave_value
     if @nb_leave_days > 0
       # 10% of the salary for the entire period
       @ten_percent_leave_value = (@salary * @nb_months * 0.1).round(2)
@@ -134,16 +134,18 @@ class LeavePeriod < Contract
     @ten_percent_leave_value
   end
 
-  def set_final_leave_value
+  private def set_final_leave_value
     if @maintain_salary_leave_value > @ten_percent_leave_value
       @final_leave_value = @maintain_salary_leave_value
     else
       @final_leave_value = @ten_percent_leave_value
     end
+    @payment_by_ten_percent_rest = @final_leave_value
+    @payment_by_the_dozen_rest = @final_leave_value
     @final_leave_value
   end
 
-  def get_last_period_leave_value
+  protected def get_last_period_leave_value
     # Returns the leave value of the last period
     if index > 0
       previous_period = periods[index-1] 
@@ -151,6 +153,26 @@ class LeavePeriod < Contract
       return previous_leave_value
     else
       return 0.0
+    end
+  end
+
+  # we calculate how much of the final value is left to be paid by the ten percent method
+  protected def deduct_payment_from_ten_percent_rest(value)
+    value.is_a?(Numeric) || raise(ArgumentError, "Value must be a numeric type")
+    if @payment_by_ten_percent_rest > 0
+      @payment_by_ten_percent_rest -= value
+    else
+      raise ArgumentError, "No remaining pay with the ten percent method."
+    end
+  end
+
+    # we calculate how much of the final value is left to be paid by the ten percent method
+  protected def deduct_payment_from_by_the_dozen_rest(value)
+    value.is_a?(Numeric) || raise(ArgumentError, "Value must be a numeric type")
+    if @payment_by_the_dozen_rest > 0
+      @payment_by_the_dozen_rest -= value
+    else
+      raise ArgumentError, "No remaining pay with the payment by the dozen method."
     end
   end
 
@@ -174,7 +196,7 @@ class MonthlyPayment < LeavePeriod
     set_payment_by_the_dozen()
   end
 
-  def calculate_perceived_salary
+  private def calculate_perceived_salary
     if Utils.is_full_month(@start_date, @end_date)
       @perceived_salary = @salary
     else
@@ -184,19 +206,23 @@ class MonthlyPayment < LeavePeriod
     @perceived_salary
   end
 
-  def set_payment_in_june
+  private def set_payment_in_june
     if @start_date.month == 6
       @payment_in_june = super.get_last_period_leave_value
     else
       # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
       @payment_in_june = 0.0
     end
-    @payment_in_june
   end
 
-  def set_payment_by_the_dozen
+  private def set_payment_by_the_dozen
     last_period_leave_value = super.get_last_period_leave_value
     @payment_by_the_dozen = (last_period_leave_value / 12).round(2)
     # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
+  end
+
+  private def set_payment_by_ten_percent
+    @payment_by_ten_percent = @perceived_salary * 0.1
+    super.deduct_payment_from_ten_percent_rest(@payment_by_ten_percent)
   end
 end
