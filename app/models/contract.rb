@@ -2,9 +2,9 @@ require 'date'
 require_relative '../../lib/utils'
 
 class Contract
-  attr_accessor :start_date, :end_date, :salary
+  attr_accessor :start_date, :end_date, :salary, :periods
 
-  def initialize(start_date, end_date, salary)
+  def initialize(start_date, end_date, salary, periods=[])
     unless start_date.is_a?(Date) && end_date.is_a?(Date)
       raise ArgumentError, "Start date and end date must be Date objects."
     end
@@ -35,11 +35,11 @@ class Contract
       # Don't go past the contract's end date
       period_end = [period_end, @end_date].min
 
-      periods << LeavePeriod.new(current_start, period_end, @salary)
+      periods << LeavePeriod.new(current_start, period_end, @salary, periods.size)
       current_start = period_end + 1
     end
 
-    periods
+    @periods = periods
   end
 end
 
@@ -48,7 +48,7 @@ class LeavePeriod < Contract
   attr_accessor :nb_months, :nb_leave_days
   attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
 
-  def initialize(start_date, end_date, salary, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
+  def initialize(start_date, end_date, salary, index=0, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
     super(start_date, end_date, salary)
 
     if start_date.month < 6 
@@ -143,16 +143,60 @@ class LeavePeriod < Contract
     @final_leave_value
   end
 
+  def get_last_period_leave_value
+    # Returns the leave value of the last period
+    if index > 0
+      previous_period = periods[index-1] 
+      previous_leave_value = previous_period.final_leave_value
+      return previous_leave_value
+    else
+      return 0.0
+    end
+  end
+
 end
-
-
 class MonthlyPayment < LeavePeriod
-  attr_accessor :perceived_salary, :payment_by_ten_percent
+  attr_reader :perceived_salary, :payment_in_june, :payment_by_the_dozen, :payment_by_ten_percent
 
-  def initialize(start_date, end_date, salary, perceived_salary=0.0, payment_by_ten_percent=0.0)
+  def initialize(start_date, end_date, salary)
+  # def initialize(start_date, end_date, salary, perceived_salary=0.0, payment_in_june=0.0, payment_by_the_dozen=0.0, payment_by_ten_percent=0.0)
     super(start_date, end_date, salary)
 
-    @perceived_salary = perceived_salary.to_f
-    @payment_by_ten_percent = payment_by_ten_percent.to_f
+    unless start_date < end_date
+      raise ArgumentError, "Start date should be before end date."
+    end
+    unless start_date.month == end_date.month && start_date.year == end_date.year
+      raise ArgumentError, "Start date and end date should be the same month."
+    end
+
+    calculate_perceived_salary()
+    set_payment_in_june()
+    set_payment_by_the_dozen()
+  end
+
+  def calculate_perceived_salary
+    if Utils.is_full_month(@start_date, @end_date)
+      @perceived_salary = @salary
+    else
+      # prorata salary for the month
+      @perceived_salary = @salary * Utils.calculate_nb_days_prorata(@start_date, @end_date)
+    end
+    @perceived_salary
+  end
+
+  def set_payment_in_june
+    if @start_date.month == 6
+      @payment_in_june = super.get_last_period_leave_value
+    else
+      # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
+      @payment_in_june = 0.0
+    end
+    @payment_in_june
+  end
+
+  def set_payment_by_the_dozen
+    last_period_leave_value = super.get_last_period_leave_value
+    @payment_by_the_dozen = (last_period_leave_value / 12).round(2)
+    # TODO SI C'EST LE DERNIER MOIS DU CONTRAT
   end
 end
