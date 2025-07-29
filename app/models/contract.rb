@@ -1,4 +1,5 @@
 require 'date'
+require_relative '../../lib/utils'
 
 class Contract
   attr_accessor :start_date, :end_date, :salary
@@ -44,9 +45,10 @@ end
 
 
 class LeavePeriod < Contract
+  attr_accessor :nb_months, :nb_leave_days
   attr_accessor :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
 
-  def initialize(start_date, end_date, salary, maintain_salary_leave_value = 0.0, ten_percent_leave_value = 0.0, final_leave_value = 0.0)
+  def initialize(start_date, end_date, salary, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
     super(start_date, end_date, salary)
 
     if start_date.month < 6 
@@ -62,10 +64,57 @@ class LeavePeriod < Contract
       end
     end
 
+    calculate_nb_months()
+    calculate_nb_leave_days()
     @maintain_salary_leave_value = maintain_salary_leave_value.to_f
     @ten_percent_leave_value = ten_percent_leave_value.to_f
     @final_leave_value = final_leave_value.to_f
   end
+
+  def calculate_nb_months
+    # Contract is less than a month
+    if @start_date.year == @end_date.year && @start_date.month == @end_date.month
+      @nb_months = Utils.calculate_nb_days_prorata(@start_date, @end_date)
+      return
+    end
+
+    # Count months between start_date and end_date
+    @nb_months = 0
+    current = Date.new(@start_date.year, @start_date.month, @start_date.day)
+    month_end = Date.new(current.year, current.month, -1)
+  
+    # prorata applied if the month is not complete
+    if @start_date.day != 1
+      @nb_months += Utils.calculate_nb_days_prorata(@start_date, month_end)
+    end
+
+    while current < @end_date
+      if Utils.is_full_month(current, month_end)
+        @nb_months += 1
+      end
+      current = current.next_month
+      month_end = Date.new(current.year, current.month, -1)
+    end
+
+    # prorata applied if the month is not complete
+    if @end_date.day != Date.new(current.year, current.month, -1).day
+      @nb_months += Utils.calculate_nb_days_prorata(current, month_end)
+      current = Date.new(current.year, current.month, 1)
+    end
+
+    @nb_months
+  end
+
+  def calculate_nb_leave_days
+    if @nb_months > 0
+      @nb_leave_days = @nb_months*2.5
+    else
+      @nb_leave_days = 0
+    end
+    puts "Number of leave days: #{@nb_leave_days}"
+    @nb_leave_days
+  end
+
 end
 
 
