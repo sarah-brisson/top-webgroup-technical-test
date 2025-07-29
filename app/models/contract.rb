@@ -40,8 +40,12 @@ class Contract
     end
 
     @periods = periods
-    @periods.each do |period|
+    @periods.each_with_index do |period, index|
       period.parent_periods = @periods
+      if index > 0
+        period.payment_by_ten_percent_rest = @periods[index-1].final_leave_value
+        period.payment_by_the_dozen_rest = @periods[index-1].final_leave_value
+      end
     end
   end
 end
@@ -53,8 +57,8 @@ end
 
 class LeavePeriod < Contract
   attr_accessor :nb_months, :nb_leave_days
-  attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value, :payment_by_ten_percent_rest, :payment_by_the_dozen_rest
-  attr_accessor :parent_periods
+  attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
+  attr_accessor :parent_periods, :payment_by_ten_percent_rest, :payment_by_the_dozen_rest
 
   def initialize(start_date, end_date, salary, index=0)
     super(start_date, end_date, salary)
@@ -78,6 +82,8 @@ class LeavePeriod < Contract
     calculate_maintain_salary_leave_value()
     calculate_ten_percent_leave_value()
     set_final_leave_value()
+    @payment_by_ten_percent_rest = 0.0
+    @payment_by_the_dozen_rest = 0.0
   end
 
   private def calculate_nb_months
