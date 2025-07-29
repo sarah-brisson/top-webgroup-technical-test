@@ -18,9 +18,6 @@ module Utils
     def self.calculate_nb_days_prorata(start_date, end_date)
         nb_days_in_a_period = calculate_nb_days_in_a_period(start_date, end_date)
         days_in_month = Date.new(start_date.year, start_date.month, -1).day
-        puts start_date
-        puts end_date
-        puts (nb_days_in_a_period.to_f / days_in_month).to_f
-        return (nb_days_in_a_period.to_f / days_in_month).to_f
+        return (nb_days_in_a_period.to_f / days_in_month).round(2)
     end
 end

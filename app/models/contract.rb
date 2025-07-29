@@ -46,7 +46,7 @@ end
 
 class LeavePeriod < Contract
   attr_accessor :nb_months, :nb_leave_days
-  attr_accessor :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
+  attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
 
   def initialize(start_date, end_date, salary, nb_months=0, nb_leave_days=0, maintain_salary_leave_value=0.0, ten_percent_leave_value=0.0, final_leave_value=0.0)
     super(start_date, end_date, salary)
@@ -66,9 +66,9 @@ class LeavePeriod < Contract
 
     calculate_nb_months()
     calculate_nb_leave_days()
-    @maintain_salary_leave_value = maintain_salary_leave_value.to_f
-    @ten_percent_leave_value = ten_percent_leave_value.to_f
-    @final_leave_value = final_leave_value.to_f
+    calculate_maintain_salary_leave_value()
+    calculate_ten_percent_leave_value()
+    set_final_leave_value()
   end
 
   def calculate_nb_months
@@ -80,14 +80,15 @@ class LeavePeriod < Contract
 
     # Count months between start_date and end_date
     @nb_months = 0
-    current = Date.new(@start_date.year, @start_date.month, @start_date.day)
-    month_end = Date.new(current.year, current.month, -1)
-  
+    current = Date.new(@start_date.year, @start_date.month, 1)
+    month_end = Date.new(@start_date.year, @start_date.month, -1)
+    
     # prorata applied if the month is not complete
     if @start_date.day != 1
       @nb_months += Utils.calculate_nb_days_prorata(@start_date, month_end)
+      current = current.next_month
     end
-
+    
     while current < @end_date
       if Utils.is_full_month(current, month_end)
         @nb_months += 1
@@ -107,12 +108,39 @@ class LeavePeriod < Contract
 
   def calculate_nb_leave_days
     if @nb_months > 0
-      @nb_leave_days = @nb_months*2.5
+      @nb_leave_days = (@nb_months*2.5).round(3)
     else
       @nb_leave_days = 0
     end
-    puts "Number of leave days: #{@nb_leave_days}"
     @nb_leave_days
+  end
+
+  def calculate_maintain_salary_leave_value
+    if @nb_leave_days > 0
+      @maintain_salary_leave_value = ((@salary / 22) * @nb_leave_days).round(2)
+    else
+      @maintain_salary_leave_value = 0.0
+    end
+    @maintain_salary_leave_value
+  end
+
+  def calculate_ten_percent_leave_value
+    if @nb_leave_days > 0
+      # 10% of the salary for the entire period
+      @ten_percent_leave_value = (@salary * @nb_months * 0.1).round(2)
+    else
+      @ten_percent_leave_value = 0.0
+    end
+    @ten_percent_leave_value
+  end
+
+  def set_final_leave_value
+    if @maintain_salary_leave_value > @ten_percent_leave_value
+      @final_leave_value = @maintain_salary_leave_value
+    else
+      @final_leave_value = @ten_percent_leave_value
+    end
+    @final_leave_value
   end
 
 end
