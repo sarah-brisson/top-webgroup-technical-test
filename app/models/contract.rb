@@ -18,6 +18,28 @@ class Contract
     @end_date = end_date
     @salary = salary.to_f # Ensure salary is a Float
   end
+
+  def split_into_leave_periods
+    periods = []
+    current_start = @start_date
+
+    while current_start <= @end_date
+      # Determine the end of the current leave period
+      # The leave period is between June 1 and May 31 of the next year.
+      if current_start.month < 6
+        period_end = Date.new(current_start.year, 5, 31)
+      else
+        period_end = Date.new(current_start.year + 1, 5, 31)
+      end
+      # Don't go past the contract's end date
+      period_end = [period_end, @end_date].min
+
+      periods << LeavePeriod.new(current_start, period_end, @salary)
+      current_start = period_end + 1
+    end
+
+    periods
+  end
 end
 
 
@@ -27,9 +49,17 @@ class LeavePeriod < Contract
   def initialize(start_date, end_date, salary, maintain_salary_leave_value = 0.0, ten_percent_leave_value = 0.0, final_leave_value = 0.0)
     super(start_date, end_date, salary)
 
-    # Ensure leave period is from June 1 to May 31 of the next year
-    unless start_date.month >= 6 && start_date.day == 1
-      raise ArgumentError, "LeavePeriod must start on June 1."
+    if start_date.month < 6 
+      max_end_date = Date.new(start_date.year, 5, 31)
+      unless start_date.month < 6 && end_date <= max_end_date
+        raise ArgumentError, "The period must be between May 31 and June 1 of the next year."
+      end
+
+    else
+      max_end_date = Date.new(start_date.year + 1, 5, 31)
+      unless start_date.month >= 6 && end_date <= max_end_date
+        raise ArgumentError, "The period must be between May 31 and June 1 of the next year."
+      end
     end
 
     @maintain_salary_leave_value = maintain_salary_leave_value.to_f
