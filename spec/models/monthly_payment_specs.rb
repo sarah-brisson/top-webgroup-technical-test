@@ -1,5 +1,5 @@
 require 'date'
-require_relative '../../app/models/monthly_payments'
+require_relative '../../app/models/monthly_payment'
 require_relative '../../lib/utils'
 
 RSpec.describe MonthlyPayment do
