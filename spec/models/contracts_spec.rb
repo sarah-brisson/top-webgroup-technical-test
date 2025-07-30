@@ -22,6 +22,14 @@ RSpec.describe Contract do
     it 'raises error for non-numeric salary' do
       expect { Contract.new(Date.new(2020,1,1), Date.new(2022,9,30), 'abc') }.to raise_error(ArgumentError)
     end
+
+    it 'raises error if salary is under 200' do
+      expect { Contract.new(Date.new(2020,1,1), Date.new(2022,9,30), 100) }.to raise_error(ArgumentError)
+    end
+
+    it 'raises error if salary is above 1200' do
+      expect { Contract.new(Date.new(2020,1,1), Date.new(2022,9,30), 1300) }.to raise_error(ArgumentError)
+    end
   end
 
 

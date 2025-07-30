@@ -15,6 +15,9 @@ class Contract
     unless salary.is_a?(Numeric)
       raise ArgumentError, "Salary must be a numeric value."
     end
+    unless salary >=200 && salary <= 1200
+      raise ArgumentError, "The salary must be between 200€ and 1200€."
+    end
 
     @start_date = start_date
     @end_date = end_date
