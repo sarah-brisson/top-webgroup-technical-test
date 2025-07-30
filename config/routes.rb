@@ -8,5 +8,7 @@ Rails.application.routes.draw do
   # Handle form submission
   post 'simulator/calculate', to: 'pages#calculate', as: :simulator_calculate
 
+  get 'simulator/calculate', to: redirect('/simulator')
+
   get "up" => "rails/health#show", as: :rails_health_check
 end
