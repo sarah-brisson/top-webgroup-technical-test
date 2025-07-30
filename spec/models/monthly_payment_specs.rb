@@ -67,11 +67,11 @@ RSpec.describe MonthlyPayment do
     context 'when the end of contract' do
       it 'calls adjust_payments_end_of_contract' do
         monthly_payment = MonthlyPayment.new(start_date_jan, end_date_jan, salary, 120.0, 50.0)
-        monthly_payment.final_leave_value = 50.0 # Set this manually for the test
+        monthly_payment.current_period_leave_value = 50.0 # Set this manually for the test
         monthly_payment.payment_by_the_dozen_rest = 20.0 # Set this manually for the test
         monthly_payment.adjust_payments_end_of_contract()
   
-        expect(monthly_payment.payment_in_june).to eq(50.0) # 0.0 (initial) + 50.0 (final_leave_value)
+        expect(monthly_payment.payment_in_june).to eq(50.0) # 0.0 (initial) + 50.0 (current_period_leave_value)
         expect(monthly_payment.payment_by_the_dozen).to eq(120.0 / 12 + 20.0 + 50.0) # 10.0 + 20.0 + 50.0 = 80.0
         expect(monthly_payment.payment_by_ten_percent).to eq(salary * 0.1 + 50.0) # 100.0 + 50.0 = 150.0
       end
@@ -165,7 +165,7 @@ RSpec.describe MonthlyPayment do
 
     before do
       # Set up state as if it just finished initialization before adjustment
-      monthly_payment.final_leave_value = 50.0
+      monthly_payment.current_period_leave_value = 50.0
       monthly_payment.payment_by_the_dozen_rest = 20.0
       # Re-run initial calculations to ensure they are consistent before adjustment
       monthly_payment.calculate_perceived_salary
@@ -178,13 +178,13 @@ RSpec.describe MonthlyPayment do
       it 'adjusts payment_in_june' do
         initial_payment_in_june = monthly_payment.payment_in_june # This would be 0.0 for Jan
         monthly_payment.adjust_payments_end_of_contract
-        expect(monthly_payment.payment_in_june).to eq(initial_payment_in_june + monthly_payment.final_leave_value)
+        expect(monthly_payment.payment_in_june).to eq(initial_payment_in_june + monthly_payment.current_period_leave_value)
       end
 
       it 'adjusts payment_by_the_dozen' do
         initial_payment_by_the_dozen = monthly_payment.payment_by_the_dozen # This would be 10.0 for Jan
         monthly_payment.adjust_payments_end_of_contract
-        expect(monthly_payment.payment_by_the_dozen).to eq(initial_payment_by_the_dozen + monthly_payment.payment_by_the_dozen_rest + monthly_payment.final_leave_value)
+        expect(monthly_payment.payment_by_the_dozen).to eq(initial_payment_by_the_dozen + monthly_payment.payment_by_the_dozen_rest + monthly_payment.current_period_leave_value)
       end
 
       it 'adjusts payment_by_ten_percent' do
@@ -198,7 +198,7 @@ RSpec.describe MonthlyPayment do
       let(:monthly_payment_no_contract_end) { MonthlyPayment.new(start_date_jan, end_date_jan, salary, 120.0, 50.0) }
 
       before do
-        monthly_payment_no_contract_end.final_leave_value = 50.0
+        monthly_payment_no_contract_end.current_period_leave_value = 50.0
         monthly_payment_no_contract_end.payment_by_the_dozen_rest = 20.0
         monthly_payment_no_contract_end.calculate_perceived_salary
         monthly_payment_no_contract_end.set_payment_in_june

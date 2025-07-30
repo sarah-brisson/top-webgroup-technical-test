@@ -55,13 +55,13 @@ class LeavePeriod
     current = first_month_end.next_day
 
     # Handle full months in between
-    while current < @end_date.beginning_of_month
+    while current < Date.new(@end_date.year, @end_date.month, 1)
       @nb_months += 1
       current = current.next_month
     end
 
     # Handle last month (possibly prorated)
-    last_month_start = @end_date.beginning_of_month
+    last_month_start = Date.new(@end_date.year, @end_date.month, 1)
     if Utils.is_full_month(last_month_start, @end_date)
       @nb_months += 1
     else

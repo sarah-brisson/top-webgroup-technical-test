@@ -24,7 +24,7 @@ class MonthlyPayment
     @end_date = end_date
     @salary = salary.to_f 
     @last_period_leave_value = last_period_leave_value.to_f
-    @payment_by_ten_percent_rest = payment_by_ten_percent_rest.round(2)
+    @payment_by_ten_percent_rest = payment_by_ten_percent_rest.to_f.round(2)
     @payment_by_the_dozen_rest = 0.0
     @payment_by_ten_percent = 0.0
     @current_period_leave_value = 0.0
