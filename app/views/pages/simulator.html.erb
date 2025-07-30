@@ -44,15 +44,15 @@
 
   <%= form_with url: simulator_calculate_path, method: :post, local: true, data: { turbo: false } do %>
     <label>Date de début du contrat :
-      <%= date_field_tag :start_date, params[:start_date] || Date.new(2021,1,1) %>
+      <%= date_field_tag :start_date, params[:start_date] || Date.new(2020,5,3) %>
     </label><br>
 
     <label>Date de fin du contrat :
-      <%= date_field_tag :end_date, params[:end_date] || Date.new(2021,12,31) %>
+      <%= date_field_tag :end_date, params[:end_date] || Date.new(2021,9,23) %>
     </label><br>
 
     <label>Salaire mensuel:
-      <%= number_field_tag :salary, params[:salary] || 400 %>
+      <%= number_field_tag :salary, params[:salary] || 700 %>
     </label><br>
 
     <%= submit_tag "Calculer" %>
@@ -78,9 +78,9 @@
           <td><%= period.start_date %> =>  <%= period.end_date %></td>
           <td><%= period.nb_months %></td>
           <td><%= period.nb_leave_days %></td>
-          <td><%= period.maintain_salary_leave_value %></td>
-          <td><%= period.ten_percent_leave_value %></td>
-          <td><%= period.final_leave_value %></td>
+          <td><%= number_to_currency(period.maintain_salary_leave_value, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
+          <td><%= number_to_currency(period.ten_percent_leave_value, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
+          <td><%= number_to_currency(period.final_leave_value, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
         </tr>
       <% end %>
     </table>
@@ -98,10 +98,10 @@
       <% @months.each_with_index do |month, i| %>
         <tr>
           <td><%= month.start_date.strftime("%B %Y") %></td>
-          <td><%= month.perceived_salary %></td>
-          <td><%= month.payment_in_june %></td>
-          <td><%= month.payment_by_the_dozen %></td>
-          <td><%= month.payment_by_ten_percent %></td>
+          <td><%= number_to_currency(month.perceived_salary, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
+          <td><%= number_to_currency(month.payment_in_june, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
+          <td><%= number_to_currency(month.payment_by_the_dozen, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
+          <td><%= number_to_currency(month.payment_by_ten_percent, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></td>
         </tr>
       <% end %>
     </table>
