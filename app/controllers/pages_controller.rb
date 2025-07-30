@@ -14,36 +14,40 @@ class PagesController < ApplicationController
         redirect_to simulator_path and return
       end
 
-      @contract = Contract.new(start_date, end_date, salary)
-      
-      # First result table
-      @periods = @contract.split_into_leave_periods
+      begin
+        @contract = Contract.new(start_date, end_date, salary)
+        # First result table
+        @periods = @contract.split_into_leave_periods    
 
-      # Second result table
-      @months = []
-      if @periods.present?
-        last_period_value = 0
-        ten_percent_rest = 0
-        dozen_rest = 0
+        # Second result table
+        @months = []
+        if @periods.present?
+          last_period_value = 0
+          ten_percent_rest = 0
+          dozen_rest = 0
 
-        @periods.each_with_index do |period, index|
-          @months += divide_period_by_month(
-            period,
-            @contract.end_date, 
-            last_period_value,
-            ten_percent_rest,
-            dozen_rest
-          )
-          last_period_value = period.final_leave_value
-          @months.each do |month|
-            ten_percent_rest += month.payment_by_ten_percent 
-            dozen_rest += month.payment_by_the_dozen_rest
+          @periods.each_with_index do |period, index|
+            @months += divide_period_by_month(
+              period,
+              @contract.end_date, 
+              last_period_value,
+              ten_percent_rest,
+              dozen_rest
+            )
+            last_period_value = period.final_leave_value
+            @months.each do |month|
+              ten_percent_rest += month.payment_by_ten_percent 
+              dozen_rest += month.payment_by_the_dozen_rest
+            end
+            # the rest of the 10% method is the value of the leave period - the sum of all 10% payments
+            ten_percent_rest = period.final_leave_value - ten_percent_rest
+            # the rest of the 1/12 method is the value of the leave period - the sum of all 1/12 payments
+            dozen_rest = period.final_leave_value - dozen_rest
           end
-          # the rest of the 10% method is the value of the leave period - the sum of all 10% payments
-          ten_percent_rest = period.final_leave_value - ten_percent_rest
-          # the rest of the 1/12 method is the value of the leave period - the sum of all 1/12 payments
-          dozen_rest = period.final_leave_value - dozen_rest
         end
+      rescue ArgumentError => e
+        flash[:error] = e.message
+        redirect_to simulator_path and return
       end
     else
       flash[:error] = "Veuillez remplir tous les champs."
