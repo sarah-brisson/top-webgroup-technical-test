@@ -1,45 +1,23 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
-      table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; }
-      th { background: #f0f0f0; }
-      input { margin: 4px 0; }
-    </style>
-  </head>
+<div>
+ <h1>Simulateur de paiement des congés payés</h1>
 
-  <body>
-    <h1>Simulatuer de paiement des congés payés</h1>
-    <%= form_with url: simulator_calculate_path, method: :post, local: true do %>
-      <label>Date de début du contrat : <%= date_field_tag :start_date, Date.new(2021,1,1) %></label><br>
-      <label>Date de fin du contrat : <%= date_field_tag :end_date,  Date.new(2021,12,31)%></label><br>
-      <label>Salaire mensuel: <%= number_field_tag :salary, 400 %></label><br>
-      <%= submit_tag "Calculer" %>
-    <% end %>
+ <% if flash[:error] %>
+  <p style="color:red"><%= flash[:error] %></p>
+ <% end %>
 
-    <!-- Simple table -->
-    <table>
-      <tr>
-        <th>Périodes</th>
-        <th>Nombre de mois d'acquisition</th>
-        <th>Nombre de jours acquis</th>
-        <th>Méthode "maintien de salaire"</th>
-        <th>Méthode 10%</th>
-        <th>Valeur monétaire de ces jours : max des 2 méthodes à gauche</th>
-      </tr>
-      <tr>
-        <td>Row 1 Col 1</td>
-        <td>Row 1 Col 2</td>
-        <td>Row 1 Col 3</td>
-      </tr>
-      <tr>
-        <td>Row 2 Col 1</td>
-        <td>Row 2 Col 2</td>
-        <td>Row 2 Col 3</td>
-      </tr>
-    </table>
-    <%= yield %>
-  </body>
-</html>
+ <%= form_with url: simulator_calculate_path, method: :post, local: true, data: { turbo: false } do %>
+  <label>Date de début du contrat :
+   <%= date_field_tag :start_date, Date.new(2021,1,1) %>
+  </label><br>
+
+  <label>Date de fin du contrat :
+   <%= date_field_tag :end_date, Date.new(2021,12,31) %>
+  </label><br>
+
+  <label>Salaire mensuel:
+   <%= number_field_tag :salary, 400 %>
+  </label><br>
+
+  <%= submit_tag "Calculer" %>
+ <% end %>
+</div>
