@@ -34,39 +34,43 @@ class LeavePeriod
   end
 
   private def calculate_nb_months
-    # Contract is less than a month
+    # If the contract is less than a month
     if @start_date.year == @end_date.year && @start_date.month == @end_date.month
       @nb_months = Utils.calculate_nb_days_prorata(@start_date, @end_date)
       return
     end
 
-    # Count months between start_date and end_date
     @nb_months = 0
-    current = Date.new(@start_date.year, @start_date.month, 1)
-    month_end = Date.new(@start_date.year, @start_date.month, -1)
-    
-    # prorata applied if the month is not complete
-    if @start_date.day != 1
-      @nb_months += Utils.calculate_nb_days_prorata(@start_date, month_end)
-      current = current.next_month
-    end
-    
-    while current < @end_date
-      if Utils.is_full_month(current, month_end)
-        @nb_months += 1
-      end
-      current = current.next_month
-      month_end = Date.new(current.year, current.month, -1)
+    current = @start_date
+
+    # Handle first month (possibly prorated)
+    first_month_end = Date.new(current.year, current.month, -1)
+    if Utils.is_full_month(current, first_month_end)
+      @nb_months += 1
+    else
+      @nb_months += Utils.calculate_nb_days_prorata(current, first_month_end)
     end
 
-    # prorata applied if the month is not complete
-    if @end_date.day != Date.new(current.year, current.month, -1).day
-      @nb_months += Utils.calculate_nb_days_prorata(current, month_end)
-      current = Date.new(current.year, current.month, 1)
+    # Move to next month
+    current = first_month_end.next_day
+
+    # Handle full months in between
+    while current < @end_date.beginning_of_month
+      @nb_months += 1
+      current = current.next_month
+    end
+
+    # Handle last month (possibly prorated)
+    last_month_start = @end_date.beginning_of_month
+    if Utils.is_full_month(last_month_start, @end_date)
+      @nb_months += 1
+    else
+      @nb_months += Utils.calculate_nb_days_prorata(last_month_start, @end_date)
     end
 
     @nb_months
   end
+
 
   def calculate_nb_leave_days
     if @nb_months > 0
