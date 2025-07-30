@@ -6,7 +6,6 @@ class LeavePeriod
   attr_reader :start_date, :end_date, :salary
   attr_reader :maintain_salary_leave_value, :ten_percent_leave_value, :final_leave_value
   attr_accessor :nb_months, :nb_leave_days
-  attr_accessor :parent_periods, :payment_by_ten_percent_rest, :payment_by_the_dozen_rest
 
   def initialize(start_date, end_date, salary)
     if start_date.month < 6 
@@ -32,8 +31,6 @@ class LeavePeriod
     calculate_maintain_salary_leave_value()
     calculate_ten_percent_leave_value()
     set_final_leave_value()
-    @payment_by_ten_percent_rest = 0.0
-    @payment_by_the_dozen_rest = 0.0
   end
 
   private def calculate_nb_months
@@ -107,71 +104,6 @@ class LeavePeriod
     end
     @final_leave_value
   end
-
-#   def get_last_period_leave_value
-#     if @index > 0 && parent_periods && parent_periods[@index-1]
-#       previous_period = parent_periods[@index-1]
-#       previous_period.final_leave_value
-#     else
-#       0.0
-#     end
-#   end
-
-#   protected def get_last_period_ten_percent_rest
-#     if @index > 0 && parent_periods && parent_periods[@index-1]
-#       previous_period = parent_periods[@index-1]
-#       previous_period.payment_by_ten_percent_rest
-#     else
-#       0.0
-#     end
-#   end
-
-#   # we calculate how much of the final value is left to be paid by the ten percent method
-#   def deduct_payment_from_ten_percent_rest(value)
-#     value.is_a?(Numeric) || raise(ArgumentError, "Value must be a numeric type")
-#     if @payment_by_ten_percent_rest > 0
-#       @payment_by_ten_percent_rest -= value
-#     else
-#       raise ArgumentError, "No remaining pay with the ten percent method."
-#     end
-#   end
-
-#     # we calculate how much of the final value is left to be paid by the ten percent method
-#   def deduct_payment_from_by_the_dozen_rest(value)
-#     value.is_a?(Numeric) || raise(ArgumentError, "Value must be a numeric type")
-#     if @payment_by_the_dozen_rest > 0
-#       @payment_by_the_dozen_rest -= value
-#     else
-#       raise ArgumentError, "No remaining pay with the payment by the dozen method."
-#     end
-#   end
-
-end
-
-def divide_period_by_month(period, last_period_leave_value, contract_end_date)
-  months = []
-
-  # If the period is less than a month, we return it as a single month
-  if period.start_date.year == period.end_date.year && period.start_date.month == period.end_date.month
-    months << MonthlyPayment.new(period.start_date, period.end_date, period.salary)
-    return months
-  end
-
-  current_start = period.start_date
-
-  while current_start <= period.end_date
-    month_end = Date.new(current_start.year, current_start.month, -1)
-    month_end = [month_end, period.end_date].min
-    # if it is the end of the contract, apply all regularisations
-    if month_end == contract_end_date
-      months << MonthlyPayment.new(current_start, month_end, period.salary, last_period_leave_value, true)
-    else
-      months << MonthlyPayment.new(current_start, month_end, last_period_leave_value, period.salary)
-    end
-    current_start = month_end + 1
-  end
-
-  months
 end
 
 

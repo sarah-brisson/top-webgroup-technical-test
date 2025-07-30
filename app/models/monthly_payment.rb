@@ -4,9 +4,15 @@ require_relative '../../lib/utils'
 
 class MonthlyPayment
   attr_reader :perceived_salary, :payment_in_june, :payment_by_the_dozen, :payment_by_ten_percent
-  attr_accessor :start_date, :end_date, :salary, :last_period_leave_value, :payment_by_the_dozen_rest, :payment_by_ten_percent_rest, :final_leave_value
+  attr_accessor :start_date, :end_date, :salary, :last_period_leave_value, :payment_by_the_dozen_rest, :payment_by_ten_percent_rest, :current_period_leave_value
 
-  def initialize(start_date, end_date, salary, last_period_leave_value=0.0, payment_by_ten_percent_rest=0.0)
+  def initialize(
+      start_date, 
+      end_date, 
+      salary, 
+      last_period_leave_value=0.0, 
+      payment_by_ten_percent_rest=0.0
+    )
     unless start_date < end_date
       raise ArgumentError, "Start date should be before end date."
     end
@@ -21,7 +27,7 @@ class MonthlyPayment
     @payment_by_ten_percent_rest = payment_by_ten_percent_rest.to_f
     @payment_by_the_dozen_rest = 0.0
     @payment_by_ten_percent = 0.0
-    @final_leave_value = 0.0
+    @current_period_leave_value = 0.0
 
     calculate_perceived_salary()
     set_payment_in_june()
@@ -66,11 +72,11 @@ class MonthlyPayment
   def adjust_payments_end_of_contract
     # Payment in June
     # If it's june we need to pay the last period leave value + this period's value
-    @payment_in_june = @payment_in_june + @final_leave_value
+    @payment_in_june = @payment_in_june + @current_period_leave_value
 
     # Payment by the dozen
     # We need to pay the rest that is due + the accumulation from the current period
-    @payment_by_the_dozen = @payment_by_the_dozen + @payment_by_the_dozen_rest + @final_leave_value
+    @payment_by_the_dozen = @payment_by_the_dozen + @payment_by_the_dozen_rest + @current_period_leave_value
 
     # Payment by ten percent
     # We need only need to pay the rest that is due
